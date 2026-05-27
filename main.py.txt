@@ -1,0 +1,168 @@
+import asyncio
+import random
+from datetime import datetime, timedelta
+from telegram import Bot
+
+# =========================
+# TELEGRAM SETTINGS
+# =========================
+
+BOT_TOKEN = "8926681279:AAEa-0EQpSoCMTbldp0GE03LNAs5wBNwKqY"
+CHAT_ID = "8241640506"
+
+bot = Bot(token=BOT_TOKEN)
+
+# =========================
+# SUMMARY
+# =========================
+
+total_signal = 0
+total_win = 0
+total_loss = 0
+
+# =========================
+# SIGNAL PAIRS
+# =========================
+
+pairs = [
+    "GBPJPY-OTC",
+    "EURUSD-OTC",
+    "USDJPY-OTC",
+    "EURJPY-OTC"
+]
+
+# =========================
+# SIGNAL TIMEFRAME
+# =========================
+
+timeframes = ["M1", "M2", "M5"]
+
+# =========================
+# SEND TELEGRAM MESSAGE
+# =========================
+
+async def send_message(text):
+    await bot.send_message(chat_id=CHAT_ID, text=text)
+
+# =========================
+# GENERATE SIGNAL
+# =========================
+
+def generate_signal():
+
+    pair = random.choice(pairs)
+
+    direction = random.choice(["🔴 PUT", "🟢 CALL"])
+
+    timeframe = random.choice(timeframes)
+
+    now = datetime.now()
+
+    entry_time = now + timedelta(minutes=1)
+
+    if timeframe == "M1":
+        exit_time = entry_time + timedelta(minutes=1)
+
+    elif timeframe == "M2":
+        exit_time = entry_time + timedelta(minutes=2)
+
+    else:
+        exit_time = entry_time + timedelta(minutes=5)
+
+    return {
+        "pair": pair,
+        "direction": direction,
+        "timeframe": timeframe,
+        "entry": entry_time.strftime("%H:%M"),
+        "exit": exit_time.strftime("%H:%M")
+    }
+
+# =========================
+# CHECK RESULT
+# =========================
+
+def check_result():
+
+    return random.choice(["WIN", "LOSS"])
+
+# =========================
+# MAIN BOT LOOP
+# =========================
+
+async def run_bot():
+
+    global total_signal
+    global total_win
+    global total_loss
+
+    while True:
+
+        signal = generate_signal()
+
+        total_signal += 1
+
+        signal_message = f"""
+🚧 LIVE SIGNAL
+
+💷 {signal['pair']}
+
+Entry ⏳ {signal['entry']}
+Exit ⏳ {signal['exit']}
+
+⌚ {signal['timeframe']}
+
+{signal['direction']}
+"""
+
+        await send_message(signal_message)
+
+        # WAIT FOR CANDLE CLOSE
+
+        if signal['timeframe'] == "M1":
+            await asyncio.sleep(60)
+
+        elif signal['timeframe'] == "M2":
+            await asyncio.sleep(120)
+
+        else:
+            await asyncio.sleep(300)
+
+        result = check_result()
+
+        if result == "WIN":
+            total_win += 1
+            result_text = "✅ WIN ✅"
+
+        else:
+            total_loss += 1
+            result_text = "❌ LOSS ❌"
+
+        result_message = f"""
+{result_text}
+
+{signal['pair']} | ⏰ {signal['entry']}
+"""
+
+        await send_message(result_message)
+
+        summary_message = f"""
+📊 Summary
+
+Date: {datetime.now().strftime("%d/%m/%Y")}
+
+Total Signals: {total_signal}
+Total Win: {total_win}
+Total Loss: {total_loss}
+"""
+
+        await send_message(summary_message)
+
+        # WAIT BEFORE NEXT SIGNAL
+
+        await asyncio.sleep(30)
+
+# =========================
+# START BOT
+# =========================
+
+asyncio.run(run_bot())
