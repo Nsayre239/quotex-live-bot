@@ -1,0 +1,7 @@
+python-telegram-bot==22.0
+websocket-client
+pandas
+numpy
+requests
+schedule
+ta

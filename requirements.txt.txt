@@ -1,6 +1,0 @@
-python-telegram-bot
-websocket-client
-pandas
-ta
-requests
-asyncio
